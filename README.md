@@ -41,7 +41,7 @@ Install the following system dependencies to build this project by following the
 Clone the project locally. Note the submodule link to the original project(s). 
 
 ```
-git clone https://github.com/Retropex/knots-startos.git
+git clone https://github.com/dathonohm/knots-startos.git
 cd knots-startos
 git submodule update --init
 ```
