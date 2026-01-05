@@ -1,14 +1,16 @@
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
 import { bitcoinConfFile } from '../../fileModels/bitcoin.conf'
 import { bitcoinConfDefaults } from '../../utils'
-import { v29_2_0_2 } from 'bitcoin-core-startos/startos/install/versions/v29.2.0_2-beta.3'
+import { v29_2_0_2 } from 'bitcoind-startos/startos/install/versions/v29.2.0_2-beta.3'
+import { v29_2_0_9} from 'bitcoind-knots/startos/install/versions/v29_2_0_9-beta.0'
 import { storeJson } from '../../fileModels/store.json'
 import { sdk } from '../../sdk'
 import { mainMounts } from '../../main'
+import { doesNotThrow } from 'assert'
 const { whitebind, bind } = bitcoinConfDefaults
 
-export const v29_2_0_9 = VersionInfo.of({
-  version: '#knots:29.2:9-beta.0',
+export const v29_2_0_9rdts = VersionInfo.of({
+  version: '#knotsrdts:29.2:9-beta.0',
   releaseNotes: 'Revamped for StartOS 0.4.0',
   migrations: {
     up: async ({ effects }) => {
@@ -47,5 +49,17 @@ export const v29_2_0_9 = VersionInfo.of({
       await bitcoinConfFile.write(effects, bitcoinConfDefaults)
     },
     down: IMPOSSIBLE,
+    other: {
+      [v29_2_0_9.options.version]: {
+        up: async () => {},
+        down: async () => {},
+      },
+      '#garbageman:29.1:7-beta.7': {
+        up: async ({ effects }) => {
+          await bitcoinConfFile.merge(effects, { uaspoof: undefined })
+        },
+        down: async () => {},
+      },
+    }
   },
 }).satisfies(v29_2_0_2.options.version)

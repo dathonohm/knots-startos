@@ -1,5 +1,5 @@
 # Build stage for Bitcoin Knots
-FROM alpine:3.21 as bitcoin-knots
+FROM alpine:3.21 AS bitcoin-knots
 
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add \
