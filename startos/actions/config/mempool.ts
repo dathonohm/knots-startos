@@ -89,7 +89,7 @@ const mempoolSpec = sdk.InputSpec.of({
     required: false,
     default: datacarriersize,
     min: 0,
-    max: 10_000,
+    max: 83,
     integer: true,
     units: i18n('bytes'),
     placeholder: datacarriersize.toString(),

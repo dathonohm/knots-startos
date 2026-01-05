@@ -221,6 +221,7 @@ export const shape = object({
   peerblockfilters: boolean.onMismatch(peerblockfilters),
   natpmp: boolean.onMismatch(natpmp),
   maxuploadtarget: natural.onMismatch(maxuploadtarget),
+  uaspoof: string.optional().onMismatch(undefined),
 }).onMismatch(bitcoinConfDefaults)
 
 function onWrite(a: unknown): any {

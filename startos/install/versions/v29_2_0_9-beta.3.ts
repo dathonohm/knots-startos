@@ -5,16 +5,17 @@ import { bitcoinConfDefaults } from '../../utils'
 import { bitcoinConfDefaults as coreDefaults } from 'bitcoin-core-startos/startos/utils'
 import { v29_2_0_2 } from 'bitcoin-core-startos/startos/install/versions/v29.2.0_2'
 import { v30_2_0_1 } from 'bitcoin-core-startos/startos/install/versions/v30.2.0_1'
+import { v29_2_0_9} from 'bitcoind-knots/startos/install/versions/v29_2_0_9-beta.2'
 import { storeJson } from '../../fileModels/store.json'
 import { sdk } from '../../sdk'
 import { mainMounts } from '../../main'
 const { whitebind, bind } = bitcoinConfDefaults
 
-export const v29_2_0_9 = VersionInfo.of({
-  version: '#knots:29.2:9-beta.2',
+export const v29_2_0_9rdts = VersionInfo.of({
+  version: '#knotsrdts:29.2:9-beta.3',
   releaseNotes: {
-    en_US: 'Add translations and update to SDK 48',
-    fr_FR: 'Ajoute les traductions and met à jour le SDK à la version 48',
+    en_US: 'Add translations and update to SDK 48 (BIP-110 UASF v0.1)',
+    fr_FR: 'Ajoute les traductions and met à jour le SDK à la version 48 (BIP-110 UASF v0.1)',
   },
   migrations: {
     up: async ({ effects }) => {
@@ -47,6 +48,9 @@ export const v29_2_0_9 = VersionInfo.of({
           whitebind,
           whitelist: undefined,
         })
+        if (existingConf.datacarriersize > 83){
+          await bitcoinConfFile.merge(effects, {datacarriersize: 83})
+        }
         return
       } // Only write conf defaults if no existing bitcoin.conf found
 
@@ -149,6 +153,41 @@ export const v29_2_0_9 = VersionInfo.of({
             await coreBitcoinConfFile.write(effects, coreDefaults)
           }
         },
+      },
+      [v29_2_0_9.options.version]: {
+        up: async ({ effects }) => {
+          await sdk.SubContainer.withTemp(
+            effects,
+            { imageId: 'bitcoind' },
+            mainMounts,
+            'nocow',
+            async (subc) => {
+              await subc.execFail(['chattr', '-R', '+C', '/.bitcoin'])
+            },
+          )
+          const existingConf = await bitcoinConfFile.read().once()
+          
+          if (existingConf) {
+            await bitcoinConfFile.merge(effects, {
+              rpcuser: undefined,
+              rpcpassword: undefined,
+              bind,
+              whitebind,
+              whitelist: undefined,
+            })
+            if (existingConf.datacarriersize > 83){
+              await bitcoinConfFile.merge(effects, {datacarriersize: 83})
+            }
+            return
+          }
+        },
+        down: async () => {},
+      },
+      '#garbageman:29.1:7-beta.7': {
+        up: async ({ effects }) => {
+          await bitcoinConfFile.merge(effects, { uaspoof: undefined, datacarriersize: 83 })
+        },
+        down: async () => {},
       },
     },
   },
