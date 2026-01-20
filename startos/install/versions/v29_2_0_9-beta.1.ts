@@ -10,8 +10,8 @@ import { doesNotThrow } from 'assert'
 const { whitebind, bind } = bitcoinConfDefaults
 
 export const v29_2_0_9rdts = VersionInfo.of({
-  version: '#knotsrdts:29.2:9-beta.0',
-  releaseNotes: 'Revamped for StartOS 0.4.0',
+  version: '#knotsrdts:29.2:9-beta.1',
+  releaseNotes: 'BIP-110 UASF Release Candidate 3',
   migrations: {
     up: async ({ effects }) => {
       await sdk.SubContainer.withTemp(

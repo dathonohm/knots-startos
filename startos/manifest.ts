@@ -2,7 +2,7 @@ import { setupManifest } from '@start9labs/start-sdk'
 
 export const manifest = setupManifest({
   id: 'bitcoind',
-  title: 'Bitcoin Knots (BIP-110 UASF)',
+  title: 'Bitcoin Knots plus BIP-110',
   license: 'MIT',
   donationUrl: null,
   wrapperRepo: 'https://github.com/dathonohm/knots-startos',
