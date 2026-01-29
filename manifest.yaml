@@ -3,7 +3,7 @@ title: "Bitcoin Knots plus BIP-110"
 version: 29.2.0.1
 eos-version: 0.3.5.1
 release-notes: |
-  * BIP-110 UASF Release Candidate 3
+  * BIP-110 UASF v0.1
 license: MIT
 wrapper-repo: https://github.com/dathonohm/knots-startos
 upstream-repo: https://github.com/dathonohm/bitcoin/
