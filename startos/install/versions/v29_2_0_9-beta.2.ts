@@ -10,8 +10,8 @@ import { doesNotThrow } from 'assert'
 const { whitebind, bind } = bitcoinConfDefaults
 
 export const v29_2_0_9rdts = VersionInfo.of({
-  version: '#knotsrdts:29.2:9-beta.1',
-  releaseNotes: 'BIP-110 UASF Release Candidate 3',
+  version: '#knotsrdts:29.2:9-beta.2',
+  releaseNotes: 'BIP-110 UASF v0.1',
   migrations: {
     up: async ({ effects }) => {
       await sdk.SubContainer.withTemp(
@@ -43,6 +43,9 @@ export const v29_2_0_9rdts = VersionInfo.of({
           whitebind,
           whitelist: undefined,
         })
+        if (existingConf.datacarriersize > 83){
+          await bitcoinConfFile.merge(effects, {datacarriersize: 83})
+        }
         return
       } // Only write conf defaults if no existing bitcoin.conf found
 
@@ -51,7 +54,32 @@ export const v29_2_0_9rdts = VersionInfo.of({
     down: IMPOSSIBLE,
     other: {
       [v29_2_0_9.options.version]: {
-        up: async () => {},
+        up: async ({ effects }) => {
+          await sdk.SubContainer.withTemp(
+            effects,
+            { imageId: 'bitcoind' },
+            mainMounts,
+            'nocow',
+            async (subc) => {
+              await subc.execFail(['chattr', '-R', '+C', '/.bitcoin'])
+            },
+          )
+          const existingConf = await bitcoinConfFile.read().once()
+          
+          if (existingConf) {
+            await bitcoinConfFile.merge(effects, {
+              rpcuser: undefined,
+              rpcpassword: undefined,
+              bind,
+              whitebind,
+              whitelist: undefined,
+            })
+            if (existingConf.datacarriersize > 83){
+              await bitcoinConfFile.merge(effects, {datacarriersize: 83})
+            }
+            return
+          }
+        },
         down: async () => {},
       },
       '#garbageman:29.1:7-beta.7': {
