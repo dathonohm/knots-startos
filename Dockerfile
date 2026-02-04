@@ -18,7 +18,8 @@ RUN apk --no-cache add \
         sqlite-dev \
         zeromq-dev \
         bash \
-        curl
+        curl \
+        git
 
 ADD ./bitcoin /bitcoin
 
