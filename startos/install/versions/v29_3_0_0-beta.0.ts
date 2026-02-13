@@ -5,17 +5,17 @@ import { bitcoinConfDefaults } from '../../utils'
 import { bitcoinConfDefaults as coreDefaults } from 'bitcoin-core-startos/startos/utils'
 import { v29_2_0_2 } from 'bitcoin-core-startos/startos/install/versions/v29.2.0_2'
 import { v30_2_0_1 } from 'bitcoin-core-startos/startos/install/versions/v30.2.0_1'
-import { v29_2_0_9} from 'bitcoind-knots/startos/install/versions/v29_2_0_9-beta.2'
+import { v29_3_0_0} from 'bitcoind-knots/startos/install/versions/v29_3_0_0-beta.0'
 import { storeJson } from '../../fileModels/store.json'
 import { sdk } from '../../sdk'
 import { mainMounts } from '../../main'
 const { whitebind, bind } = bitcoinConfDefaults
 
-export const v29_2_0_9rdts = VersionInfo.of({
-  version: '#knotsrdts:29.2:9-beta.3',
+export const v29_3_0_0rdts = VersionInfo.of({
+  version: '#knotsrdts:29.3:0-beta.0',
   releaseNotes: {
-    en_US: 'Add translations and update to SDK 48 (BIP-110 UASF v0.1)',
-    fr_FR: 'Ajoute les traductions and met à jour le SDK à la version 48 (BIP-110 UASF v0.1)',
+    en_US: 'Update to v29.3.knots20260210+bip110-v0.2',
+    fr_FR: 'Met à jour vers v29.3.knots20260210+bip110-v0.2',
   },
   migrations: {
     up: async ({ effects }) => {
@@ -154,7 +154,7 @@ export const v29_2_0_9rdts = VersionInfo.of({
           }
         },
       },
-      [v29_2_0_9.options.version]: {
+      [v29_3_0_0.options.version]: {
         up: async ({ effects }) => {
           await sdk.SubContainer.withTemp(
             effects,
