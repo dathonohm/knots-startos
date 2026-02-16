@@ -14,8 +14,8 @@ const { whitebind, bind } = bitcoinConfDefaults
 export const v29_3_0_0rdts = VersionInfo.of({
   version: '#knotsrdts:29.3:0-beta.0',
   releaseNotes: {
-    en_US: 'Update to v29.3.knots20260210+bip110-v0.2',
-    fr_FR: 'Met à jour vers v29.3.knots20260210+bip110-v0.2',
+    en_US: 'Update to v29.3.knots20260210+bip110-v0.3',
+    fr_FR: 'Met à jour vers v29.3.knots20260210+bip110-v0.3',
   },
   migrations: {
     up: async ({ effects }) => {
