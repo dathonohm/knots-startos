@@ -2,6 +2,7 @@ import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 import { v_28_3_5_b1 } from 'bitcoin-core-startos/startos/install/versions/v28.3.5.b1'
 import { v_29_3_5_b1 } from 'bitcoin-core-startos/startos/install/versions/v29.3.5.b1'
 import { v_30_2_5_b2 } from 'bitcoin-core-startos/startos/install/versions/v30.2.5.b2'
+import { v29_3_1_b6 as knots } from 'bitcoind-knots/startos/install/versions/v29.3_1.b6'
 import { bitcoinConfFile } from '../../fileModels/bitcoin.conf'
 /**
  * Reset all mempool settings to undefined so the new flavor's upstream
@@ -44,7 +45,7 @@ const mempoolReset = {
 }
 
 export const v29_3_1_b6 = VersionInfo.of({
-  version: '#knots:29.3:1-beta.6',
+  version: '#knotsrdts:29.3:1-beta.6',
   releaseNotes: {
     en_US: 'Fix pruning bug: archival nodes no longer auto-switch to pruning',
   },
@@ -82,6 +83,14 @@ export const v29_3_1_b6 = VersionInfo.of({
           await bitcoinConfFile.merge(effects, mempoolReset)
         },
       },
+      [knots.options.version]: {
+        up: async ({ effects }) => {
+          await bitcoinConfFile.merge(effects, mempoolReset)
+        },
+        down: async ({ effects }) => {
+          await bitcoinConfFile.merge(effects, mempoolReset)
+        },
+      }
     },
   },
 }).satisfies(v_29_3_5_b1.options.version)
