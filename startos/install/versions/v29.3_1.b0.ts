@@ -47,11 +47,11 @@ const mempoolReset = {
 export const v29_3_1_b0 = VersionInfo.of({
   version: '#knotsrdts:29.3:1-beta.0',
   releaseNotes: {
-    en_US: 'Update to v29.3.knots20260210+bip110-v0.4',
-    es_ES: 'Actualización a v29.3.knots20260210+bip110-v0.4',
-    de_DE: 'Aktualisierung auf v29.3.knots20260210+bip110-v0.4',
-    pl_PL: 'Aktualizacja do wersji 29.3.knots20260210+bip110-v0.4',
-    fr_FR: 'Mise à jour vers la version 29.3.knots20260210+bip110-v0.4',
+    en_US: 'Update to v29.3.knots20260210+bip110-v0.4.1',
+    es_ES: 'Actualización a v29.3.knots20260210+bip110-v0.4.1',
+    de_DE: 'Aktualisierung auf v29.3.knots20260210+bip110-v0.4.1',
+    pl_PL: 'Aktualizacja do wersji 29.3.knots20260210+bip110-v0.4.1',
+    fr_FR: 'Mise à jour vers la version 29.3.knots20260210+bip110-v0.4.1',
   },
   migrations: {
     up: async () => {},
