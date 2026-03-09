@@ -2,6 +2,7 @@ import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 import { v28_3_0_b0 } from 'bitcoin-core-startos/startos/install/versions/v28.3_0.b0'
 import { v29_3_0_b0 } from 'bitcoin-core-startos/startos/install/versions/v29.3_0.b0'
 import { v30_2_2_b0 } from 'bitcoin-core-startos/startos/install/versions/v30.2_2.b0'
+import { v29_3_1_b0 as knots } from 'bitcoind-knots/startos/install/versions/v29.3_1.b0'
 import { bitcoinConfFile } from '../../fileModels/bitcoin.conf'
 /**
  * Reset all mempool settings to undefined so the new flavor's upstream
@@ -44,13 +45,13 @@ const mempoolReset = {
 }
 
 export const v29_3_1_b0 = VersionInfo.of({
-  version: '#knots:29.3:1-beta.0',
+  version: '#knotsrdts:29.3:1-beta.0',
   releaseNotes: {
-    en_US: 'Add new wallet actions',
-    es_ES: 'Añadir nuevas acciones de cartera',
-    de_DE: 'Neue Wallet-Aktionen hinzufügen',
-    pl_PL: 'Dodaj nowe akcje portfela',
-    fr_FR: 'Ajout de nouvelles actions pour le portefeuille',
+    en_US: 'Update to v29.3.knots20260210+bip110-v0.4',
+    es_ES: 'Actualización a v29.3.knots20260210+bip110-v0.4',
+    de_DE: 'Aktualisierung auf v29.3.knots20260210+bip110-v0.4',
+    pl_PL: 'Aktualizacja do wersji 29.3.knots20260210+bip110-v0.4',
+    fr_FR: 'Mise à jour vers la version 29.3.knots20260210+bip110-v0.4',
   },
   migrations: {
     up: async () => {},
@@ -86,6 +87,14 @@ export const v29_3_1_b0 = VersionInfo.of({
           await bitcoinConfFile.merge(effects, mempoolReset)
         },
       },
+      [knots.options.version]: {
+        up: async ({ effects }) => {
+          await bitcoinConfFile.merge(effects, mempoolReset)
+        },
+        down: async ({ effects }) => {
+          await bitcoinConfFile.merge(effects, mempoolReset)
+        },
+      }
     },
   },
 }).satisfies(v29_3_0_b0.options.version)
