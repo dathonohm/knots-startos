@@ -9,11 +9,11 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
 
   const onlynetList = [onlynet ?? []].flat()
 
-  if (externalip?.includes('.onion') || onlynetList.includes('onion')) {
+  if (externalip?.some((ip) => ip?.includes('.onion')) || onlynetList.includes('onion')) {
     return {
       tor: {
         kind: 'running',
-        versionRange: '>=0.4.9.5:0-beta.0',
+        versionRange: '>=0.4.9.5:0-beta.4',
         healthChecks: [],
       },
     }

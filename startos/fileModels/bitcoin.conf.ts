@@ -3,6 +3,7 @@ import * as diskusage from 'diskusage'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 import {
+  i2PSamAddress,
   peerPortExternal,
   peerPortInternal,
   rpcallowip,
@@ -117,13 +118,13 @@ export const shape = z
       .union([onlyNetOption, z.array(onlyNetOption)])
       .optional()
       .catch(undefined),
-    externalip: iniString,
+    externalip: iniStringArray,
     whitelist: iniStringArray,
     v2transport: iniBoolean,
     connect: iniStringArray,
     addnode: iniStringArray,
     maxconnections: iniNumber,
-    i2psam: iniString,
+    i2psam: z.literal(i2PSamAddress).optional().catch(undefined),
     i2pacceptincoming: iniBoolean,
 
     // Wallet
@@ -157,7 +158,7 @@ export const shape = z
         z.string().transform(Number),
         z.number(),
       ])
-      .transform((v) => (v !== 0 && v < minPrune ? minPrune : v))
+      .transform((v) => (v === 0 ? undefined : v < minPrune ? minPrune : v))
       .optional()
       .catch(undefined),
     coinstatsindex: iniBoolean,
@@ -200,7 +201,6 @@ export const diskUsage = utils.once(() => diskusage.check('/'))
 export const archivalMin = 900_000_000_000
 
 // Override defaults (diverging from upstream Bitcoin Knots)
-export const defaultDbcache = 5_000
 export const defaultDatacarriercost = 1
 
 export const fullConfigSpec = sdk.InputSpec.of({
@@ -637,7 +637,7 @@ export const fullConfigSpec = sdk.InputSpec.of({
       default: disk.total < archivalMin ? minPrune : null,
       integer: true,
       units: 'MiB',
-      min: 0,
+      min: minPrune,
       max: Math.floor((disk.total * 0.75) / (1024 * 1024)),
     }
   }),
@@ -647,7 +647,7 @@ export const fullConfigSpec = sdk.InputSpec.of({
       'How much RAM to allocate for caching the TXO set. Higher values improve syncing performance, but may result in some re-work in the event of an ungraceful shutdown. 4-7GB is high enough to get most of the peformance benefit during IBD. Consider reducing this setting for lower resource devices (or a device with less available RAM)',
     ),
     required: false,
-    default: defaultDbcache,
+    default: null,
     min: 0,
     integer: true,
     units: 'MiB',
@@ -984,7 +984,7 @@ function fileToForm(
       blockreconstructionextratxn,
       blockreconstructionextratxnsize,
     },
-    prune,
+    prune: prune ?? null,
     dbcache: dbcache ?? null,
     dbbatchsize: dbbatchsize ?? null,
     blockfilters: {
@@ -1024,6 +1024,8 @@ function fileToForm(
   }
 }
 
+// @TODO: formToFile and fileToForm have no exhaustiveness check — if a new field
+// is added to fullConfigSpec, TypeScript won't warn that it's missing here.
 function formToFile(
   input: T.DeepPartial<typeof fullConfigSpec._TYPE>,
 ): z.infer<typeof shape> {
@@ -1098,6 +1100,7 @@ function formToFile(
     deprecatedrpc: 'create_bdb',
     rpcauth: raw?.rpcauth?.filter((a) => !!a) as string[] | undefined,
     whitelist: raw?.whitelist?.filter((a) => !!a) as string[] | undefined,
+    externalip: raw?.externalip?.filter((a) => !!a) as string[] | undefined,
 
     // RPC (prune-derived)
     rpcbind: prune ? rpcbindPruned : rpcbind,

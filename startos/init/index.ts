@@ -1,22 +1,20 @@
-import { sdk } from '../sdk'
-import { setDependencies } from '../dependencies'
-import { setInterfaces } from '../interfaces'
-import { versionGraph } from '../install/versionGraph'
 import { actions } from '../actions'
 import { restoreInit } from '../backups'
-import { taskSetExternal } from './taskSetExternal'
+import { setDependencies } from '../dependencies'
+import { versionGraph } from '../versions'
+import { setInterfaces } from '../interfaces'
+import { sdk } from '../sdk'
 import { seedFiles } from './seedFiles'
-import { watchPrune } from './watchPrune'
+import { watchHosts } from './watchHosts'
 
 export const init = sdk.setupInit(
-  seedFiles,
   restoreInit,
   versionGraph,
+  seedFiles,
   setInterfaces,
   setDependencies,
   actions,
-  taskSetExternal,
-  watchPrune,
+  watchHosts,
 )
 
 export const uninit = sdk.setupUninit(versionGraph)

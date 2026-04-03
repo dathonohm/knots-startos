@@ -1,9 +1,9 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
-import { v_28_3_5_b1 } from 'bitcoin-core-startos/startos/install/versions/v28.3.5.b1'
-import { v_29_3_5_b1 } from 'bitcoin-core-startos/startos/install/versions/v29.3.5.b1'
-import { v_30_2_5_b2 } from 'bitcoin-core-startos/startos/install/versions/v30.2.5.b2'
-import { v29_3_1_b6 as knots } from 'bitcoind-knots/startos/install/versions/v29.3_1.b6'
-import { bitcoinConfFile } from '../../fileModels/bitcoin.conf'
+import { v_28_3_5 } from 'bitcoin-core-startos/startos/versions/v28.3.5'
+import { v_29_3_5 } from 'bitcoin-core-startos/startos/versions/v29.3.5'
+import { v_30_2_5 } from 'bitcoin-core-startos/startos/versions/v30.2.5'
+import { v29_3_2 as knots } from 'bitcoind-knots/startos/versions/v29.3_2'
+import { bitcoinConfFile } from '../fileModels/bitcoin.conf'
 /**
  * Reset all mempool settings to undefined so the new flavor's upstream
  * defaults take effect. This is the primary reason users switch between
@@ -44,16 +44,16 @@ const mempoolReset = {
   minrelaymaturity: undefined,
 }
 
-export const v29_3_1_b6 = VersionInfo.of({
-  version: '#knotsrdts:29.3:1-beta.6',
+export const v29_3_2 = VersionInfo.of({
+  version: '#knotsrdts:29.3:2',
   releaseNotes: {
-    en_US: 'Fix pruning bug: archival nodes no longer auto-switch to pruning',
+    en_US: 'Multiple bug fixes',
   },
   migrations: {
     up: async ({ effects }) => {},
     down: IMPOSSIBLE,
     other: {
-      [v_28_3_5_b1.options.version]: {
+      [v_28_3_5.options.version]: {
         // Core → Knots
         up: async ({ effects }) => {
           await bitcoinConfFile.merge(effects, mempoolReset)
@@ -63,7 +63,7 @@ export const v29_3_1_b6 = VersionInfo.of({
           await bitcoinConfFile.merge(effects, mempoolReset)
         },
       },
-      [v_29_3_5_b1.options.version]: {
+      [v_29_3_5.options.version]: {
         // Core → Knots: reset mempool so Knots upstream defaults apply
         up: async ({ effects }) => {
           await bitcoinConfFile.merge(effects, mempoolReset)
@@ -73,7 +73,7 @@ export const v29_3_1_b6 = VersionInfo.of({
           await bitcoinConfFile.merge(effects, mempoolReset)
         },
       },
-      [v_30_2_5_b2.options.version]: {
+      [v_30_2_5.options.version]: {
         // Core → Knots
         up: async ({ effects }) => {
           await bitcoinConfFile.merge(effects, mempoolReset)
@@ -93,4 +93,4 @@ export const v29_3_1_b6 = VersionInfo.of({
       }
     },
   },
-}).satisfies(v_29_3_5_b1.options.version)
+}).satisfies(v_29_3_5.options.version)

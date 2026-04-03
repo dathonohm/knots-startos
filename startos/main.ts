@@ -170,22 +170,30 @@ export const main = sdk.setupMain(async ({ effects }) => {
         fn: async () => {
           try {
             await access(`${bitcoindSub.rootfs}${rpcCookiePath}`)
-            const res = await bitcoindSub.exec(getBlockchainInfo)
-            return res.exitCode === 0
-              ? {
-                  message: i18n('The Bitcoin RPC Interface is ready'),
-                  result: 'success',
-                }
-              : {
-                  message: i18n('The Bitcoin RPC Interface is not ready'),
-                  result: 'starting',
-                }
           } catch {
             console.log('Waiting for cookie to be created')
             return {
               message: i18n('The Bitcoin RPC Interface is not ready'),
               result: 'starting',
             }
+          }
+
+          const res = await bitcoindSub.exec([
+            ...bitcoinCliArgs({ prune: !!bitcoinConf.prune }),
+            '-rpcconnect=127.0.0.1',
+            'uptime',
+          ])
+
+          if (res.exitCode === 0) {
+            return {
+              message: i18n('The Bitcoin RPC Interface is ready'),
+              result: 'success',
+            }
+          }
+
+          return {
+            message: i18n('The Bitcoin RPC Interface is not ready'),
+            result: 'starting',
           }
         },
       },
@@ -237,8 +245,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
               fullySynced: true,
               snapshotInUse: false,
             })
-            // Reduce dbcache after initial sync to free RAM
-            await bitcoinConfFile.merge(effects, { dbcache: 450 })
+            // Reduce dbcache and dbbatchsize after initial sync to free RAM
+            await bitcoinConfFile.merge(effects, { dbcache: undefined, dbbatchsize: undefined })
           }
 
           return null
@@ -337,9 +345,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
         }
         return {
           result: 'success',
-          message: externalip?.includes('.onion')
+          message: externalip?.some((ip) => ip?.includes('.onion'))
             ? i18n('Inbound and outbound connections')
-            : i18n('Outbound connections only'),
+            : i18n('Outbound only. Add an onion address to enable inbound.'),
         }
       },
     },
@@ -361,9 +369,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
         return {
           result: 'success',
           message:
-            externalip && !externalip.includes('.onion')
+            externalip?.some((ip) => ip && !ip.includes('.onion'))
               ? i18n('Inbound and outbound connections')
-              : i18n('Outbound connections only'),
+              : i18n('Outbound only. Publish an IP address to enable inbound.'),
         }
       },
     },

@@ -7,7 +7,7 @@
 > **Upstream docs:** <https://bitcoinknots.org/>
 >
 > Everything not listed in this document should behave the same as upstream
-> Bitcoin Knots v29.3. If a feature, setting, or behavior is not mentioned
+> Bitcoin Knots. If a feature, setting, or behavior is not mentioned
 > here, the upstream documentation is accurate and fully applicable.
 
 An enhanced Bitcoin full node implementation with additional policy controls for mempool filtering and spam prevention. See the [upstream repo](https://github.com/bitcoinknots/bitcoin) for general Bitcoin Knots documentation.
@@ -40,7 +40,7 @@ This package shares the `bitcoind` package ID with [Bitcoin Core](https://github
 
 | Property      | Value                                                                        |
 | ------------- | ---------------------------------------------------------------------------- |
-| Image         | Custom Dockerfile (multi-stage Alpine build from Bitcoin Knots v29.3 source) |
+| Image         | Custom Dockerfile (multi-stage Alpine build from Bitcoin Knots source)       |
 | Architectures | x86_64, aarch64, riscv64                                                     |
 | Entrypoint    | `bitcoind`                                                                   |
 
@@ -51,8 +51,8 @@ Three additional containers are used:
 | Container | Image                              | Purpose                                       |
 | --------- | ---------------------------------- | --------------------------------------------- |
 | `proxy`   | `ghcr.io/start9labs/btc-rpc-proxy` | RPC proxy for pruned nodes                    |
-| `python`  | `python:3.13.11-alpine`            | Runs `rpcauth.py` to generate RPC credentials |
-| `i2pd`    | `purplei2p/i2pd:release-2.58.0`    | Embedded I2P daemon (when enabled)            |
+| `python`  | `python` (Alpine)                  | Runs `rpcauth.py` to generate RPC credentials |
+| `i2pd`    | `purplei2p/i2pd`                   | Embedded I2P daemon (when enabled)            |
 
 ## Volume and Data Layout
 
@@ -63,9 +63,11 @@ Three additional containers are used:
 
 StartOS-specific files on the `main` volume:
 
-| File         | Purpose                                                           |
-| ------------ | ----------------------------------------------------------------- |
-| `store.json` | Persistent StartOS state (reindex flags, sync status, wantsOnion) |
+| File         | Purpose                                                                       |
+| ------------ | ----------------------------------------------------------------------------- |
+| `store.json` | Persistent StartOS state (reindex flags, sync status, IPC toggle) |
+
+Blockchain data directories (`blocks/`, `chainstate/`, `indexes/`) reside on the `main` volume alongside the standard `bitcoin.conf` and `.cookie` files.
 
 ## Installation and First-Run Flow
 
@@ -73,12 +75,8 @@ StartOS-specific files on the `main` volume:
 2. Default `bitcoin.conf` and `store.json` are seeded. Only values that **diverge** from upstream Bitcoin Knots defaults are written (see [Default Overrides](#default-overrides)); all other settings are left unset so bitcoind uses its built-in defaults. Knots-specific policy settings (spam filtering) are enabled by default upstream
 3. **Disk-aware defaults**: on disks smaller than 900 GB, pruning is automatically enabled (550 MiB target) and `txindex` is disabled; on larger disks, a full archival node is configured
 4. **I2P enabled by default**: the embedded I2P daemon starts automatically with `i2pacceptincoming=true`, so the node accepts inbound peer connections over I2P out of the box — no user configuration required
-5. **Tor proxy always configured**: the `-onion` flag is set to the StartOS Tor proxy on every start, enabling outbound connections over Tor. To additionally advertise a public address (clearnet IP or Tor onion), use the **Peer Settings** action
+5. **Tor proxy always configured**: the `-onion` flag is set to the StartOS Tor proxy on every start, enabling outbound connections over Tor. Inbound connections are enabled automatically when a public address (clearnet IP or Tor onion) is published on the peer interface
 6. Bitcoin Knots begins syncing the blockchain (Initial Block Download)
-
-### Flavor Migration
-
-When switching between Bitcoin Core and Bitcoin Knots, the migration preserves existing `bitcoin.conf` settings and adds any Knots-specific (or Core-specific) options that were not previously present.
 
 ## Default Networking
 
@@ -87,8 +85,8 @@ Out of the box, Bitcoin Knots on StartOS connects to the Bitcoin network over mu
 | Transport     | Default                                   | Inbound                             | How to change                                       |
 | ------------- | ----------------------------------------- | ----------------------------------- | --------------------------------------------------- |
 | **I2P**       | Enabled (embedded `i2pd` SAM proxy)       | Accepted (`i2pacceptincoming=true`) | Peer Settings → I2P SAM Proxy → Disabled            |
-| **Tor**       | Outbound via StartOS Tor proxy (`-onion`) | No (no onion address advertised)    | Peer Settings → Public Address → Create Tor Address |
-| **IPv4/IPv6** | Enabled (clearnet peer discovery)         | No (`externalip` not set)           | Peer Settings → Public Address → select a public IP |
+| **Tor**       | Outbound via StartOS Tor proxy (`-onion`) | No (no onion address advertised)    | Add an onion address on the peer interface           |
+| **IPv4/IPv6** | Enabled (clearnet peer discovery)         | No (`externalip` not set)           | Publish an IP address on the peer interface          |
 | **BIP324 v2** | Enabled (`v2transport=true`)              | —                                   | Peer Settings → Use V2 P2P Transport Protocol       |
 
 To restrict outbound connections to specific networks only, use the **onlynet** setting in Peer Settings.
@@ -101,12 +99,12 @@ Bitcoin Knots is configured through **StartOS actions** that write to `bitcoin.c
 
 ### Configuration Actions
 
-| Action               | Settings                                                                                                                                                                                                                                                                                                                                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Mempool Settings** | All Core mempool options plus Knots-specific: rejectparasites, rejecttokens, mempoolreplacement (disabled/optin/optout), mempooltruc (reject/accept/enforce), permitbaredatacarrier, permitbareanchor, permitbarepubkey, permitephemeral, maxscriptsize, datacarriercost, acceptnonstddatacarrier, dustrelayfee, bytespersigopstrict, maxtxlegacysigops, acceptunknownwitness, minrelaycoinblocks, minrelaymaturity |
-| **Peer Settings**    | maxconnections, onlynet (ipv4/ipv6/onion/i2p/cjdns), BIP324 v2transport, I2P SAM proxy (enabled/disabled), externalip (public address / Tor onion / none), connect/addnode peers                                                                                                                                                                                                                                    |
-| **RPC Settings**     | rpcservertimeout, rpcthreads, rpcworkqueue                                                                                                                                                                                                                                                                                                                                                                          |
-| **Other Settings**   | ZMQ, txindex, blocknotify, coinstatsindex, wallet settings (enable/avoidpartialspends/discardfee), pruning, dbcache, softwareexpiry, template construction (blockmaxsize/blockmaxweight), block reconstruction, natpmp, maxuploadtarget, BIP158/BIP157 block filters, bloom filters                                                                                                                                 |
+| Action               | Settings                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Mempool Settings** | persistmempool, maxmempool, mempoolexpiry, permitbaremultisig, OP_RETURN (datacarrier/datacarriersize)                                                                                           |
+| **Peer Settings**    | onlynet (ipv4/ipv6/onion/i2p/cjdns), BIP324 v2transport, I2P SAM proxy (enabled/disabled), connect/addnode peers                                                                                |
+| **RPC Settings**     | rpcservertimeout, rpcthreads, rpcworkqueue                                                                                                                                                       |
+| **Other Settings**   | ZMQ, txindex, blocknotify, coinstatsindex, wallet settings (enable/avoidpartialspends/discardfee), pruning, dbcache, dbbatchsize, BIP158/BIP157 block filters, bloom filters |
 
 Settings **not** managed by StartOS (hardcoded):
 
@@ -141,12 +139,12 @@ This is transparent to dependent services — port 8332 always serves RPC.
 
 ### Configuration
 
-| Action               | Purpose                                                                                  | Availability |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------------ |
-| **Mempool Settings** | Configure mempool behavior and Knots-specific policy filters                             | Any          |
-| **Peer Settings**    | Configure maxconnections, networking, I2P, public address (externalip), peer connections | Any          |
-| **RPC Settings**     | Configure RPC server parameters                                                          | Any          |
-| **Other Settings**   | Configure ZMQ, indexes, wallets, pruning, softwareexpiry, template, natpmp               | Any          |
+| Action               | Purpose                                                                  | Availability |
+| -------------------- | ------------------------------------------------------------------------ | ------------ |
+| **Mempool Settings** | Configure mempool behavior                                               | Any          |
+| **Peer Settings**    | Configure networking, I2P, peer connections                              | Any          |
+| **RPC Settings**     | Configure RPC server parameters                                          | Any          |
+| **Other Settings**   | Configure ZMQ, indexes, wallets, pruning, performance tuning             | Any          |
 
 ### RPC Users
 
@@ -203,19 +201,22 @@ This is transparent to dependent services — port 8332 always serves RPC.
 
 ## Health Checks
 
-| Check              | Method                                                  | Messages                                                                            |
-| ------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **RPC**            | Waits for `.cookie` file, then `bitcoin-cli getrpcinfo` | Ready: "The Bitcoin RPC Interface is ready"                                         |
-| **Sync Progress**  | `bitcoin-cli getblockchaininfo`                         | Shows percentage during IBD; "Bitcoin is fully synced" when complete                |
-| **Reachability**   | Checks `externalip` and I2P incoming config             | Disabled: "Your node can peer with other nodes, but other nodes cannot peer with you" (hidden when node is reachable via public IP, Tor, or I2P incoming) |
+| Check              | Method                                                  | Messages                                                                                          |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **RPC**            | Waits for `.cookie` file, then `bitcoin-cli uptime`      | Ready: "The Bitcoin RPC Interface is ready"                                                       |
+| **Blockchain Sync**| `bitcoin-cli getblockchaininfo`                         | Shows percentage during IBD; "Bitcoin is fully synced" when complete                              |
+| **I2P**            | I2PControl API (auth + router info)                     | "Inbound and outbound connections" or "Outbound connections only" based on `i2pacceptincoming`    |
+| **Tor**            | Tor install/running status                              | "Inbound and outbound" when an onion address is published; otherwise "Outbound only"              |
+| **Clearnet**       | Checks published IP addresses                           | "Inbound and outbound" when an IP address is published; otherwise "Outbound only"                 |
+| **RPC Proxy**      | Port listening (when pruned)                            | Ready: "The Bitcoin RPC Proxy is ready"                                                           |
 
 ## Dependencies
 
 | Dependency | Condition                                                                                | Required State              |
 | ---------- | ---------------------------------------------------------------------------------------- | --------------------------- |
-| **Tor**    | When `wantsOnion` is true, `externalip` contains `.onion`, or `onlynet` includes `onion` | Running (>= 0.4.8:0-beta.0) |
+| **Tor**    | When `externalip` contains `.onion` or `onlynet` includes `onion` | Running |
 
-When a Tor onion address is requested via the **Peer Settings** action, a task is created asking Tor to provision an onion service. Once fulfilled, the onion address is set as `externalip` automatically. Other StartOS services (LND, Core Lightning, Electrs, etc.) depend on Bitcoin Knots.
+When a Tor onion address is added to the peer interface, it is automatically set as `externalip` in `bitcoin.conf` and advertised to peers. Other StartOS services (LND, Core Lightning, Electrs, etc.) depend on Bitcoin Knots.
 
 ## Default Overrides
 
@@ -225,7 +226,8 @@ Only settings that **diverge from upstream Bitcoin Knots defaults** are seeded i
 
 | Setting | Upstream Default | Our Default | Reason |
 | --- | --- | --- | --- |
-| `dbcache` | 450 MiB | 5000 MiB | Faster IBD; reduced to 450 automatically after initial sync completes |
+| `dbcache` | 450 MiB | 25% of system RAM (max 5120 MiB) | Faster IBD; reset to upstream default automatically after initial sync completes |
+| `dbbatchsize` | 16777216 (16 MiB) | RAM-scaled (16–32 MiB) | Faster UTXO writes during sync; reset to upstream default after initial sync |
 | `blockfilterindex` | off | `basic` | Required by dependent services (Electrs, etc.) for BIP158 filters |
 | `natpmp` | true | false | NAT-PMP disabled to avoid unexpected port mapping on StartOS |
 | `datacarriercost` | 4 | 1 | Treat extra data as 1 vbyte per actual byte (more permissive relay) |
@@ -254,9 +256,9 @@ Configuration actions use a consistent pattern for number fields:
 
 - **`default: null`** — the field is empty; if the user saves without setting a value, the key is omitted from `bitcoin.conf` and bitcoind uses its upstream default
 - **`placeholder`** — shows the upstream bitcoind default, so the user knows what value applies when the field is left empty
-- **`default: <value>`** — used only when we intentionally override the upstream default (e.g. `dbcache: 5000`); "reset defaults" restores our override, not the upstream value
+- **`default: <value>`** — used only when we intentionally override the upstream default; "reset defaults" restores our override, not the upstream value
 
-Override defaults (`defaultDbcache`, `defaultPrune`, `defaultBlockmaxsize`, `defaultBlockmaxweight`, `defaultDatacarriercost`) are defined once in `bitcoin.conf.ts` and imported by `seedFiles.ts`, ensuring the form defaults and seed values cannot drift apart.
+Override defaults for `dbcache` and `dbbatchsize` are computed dynamically from system RAM at install time in `seedFiles.ts`. Static overrides (`defaultDatacarriercost`) are defined once in `bitcoin.conf.ts` and imported by `seedFiles.ts`, ensuring the form defaults and seed values cannot drift apart.
 
 ## Limitations and Differences
 
@@ -291,13 +293,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development wo
 
 ```yaml
 package_id: bitcoind
-upstream_version: '29.3'
 flavor: knots
-image: custom Dockerfile (built from Bitcoin Knots v29.3 source)
+image: custom Dockerfile (built from Bitcoin Knots source)
 additional_images:
   - ghcr.io/start9labs/btc-rpc-proxy (pruned node RPC proxy)
-  - python:3.13.11-alpine (RPC credential generation)
-  - purplei2p/i2pd:release-2.58.0 (embedded I2P)
+  - python (Alpine, RPC credential generation)
+  - purplei2p/i2pd (embedded I2P)
 architectures: [x86_64, aarch64, riscv64]
 volumes:
   main: /root/.bitcoin
@@ -336,9 +337,12 @@ actions:
   - restore-wallet
   - remove-wallet
 health_checks:
-  - bitcoin-cli_getrpcinfo: rpc_ready
-  - bitcoin-cli_getblockchaininfo: sync_progress
-  - reachability: disabled_when_unreachable
+  - rpc: bitcoin-cli_uptime (after .cookie file exists)
+  - sync-progress: bitcoin-cli_getblockchaininfo
+  - i2p: port_listening / status
+  - tor: install/running status + onion address check
+  - clearnet: published IP address check
+  - rpc-proxy: port_listening (pruned only)
 backup_volumes:
   - main (excluding blocks/, chainstate/, indexes/)
   - i2pd (excluding ephemeral data)
