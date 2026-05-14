@@ -44,10 +44,12 @@ const mempoolReset = {
   minrelaymaturity: undefined,
 }
 
-export const v29_3_2 = VersionInfo.of({
-  version: '#knotsrdts:29.3:2',
+export const v29_3_3 = VersionInfo.of({
+  version: '#knotsrdts:29.3:3',
   releaseNotes: {
-    en_US: 'Multiple bug fixes',
+    en_US: `**Internal**
+
+- Bumps \`@start9labs/start-sdk\` to 1.5.1.`,
   },
   migrations: {
     up: async ({ effects }) => {},
